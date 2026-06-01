@@ -1,13 +1,11 @@
-const CACHE_NAME = 'modo-final';
+const CACHE_NAME = 'modo-v-final';
 const urlsToCache = [
   '/',
   '/index.html',
   '/style.css',
   '/app.js',
   '/manifest.json',
-  '/offline.html',
-  '/icon-192.png',
-  '/icon-512.png'
+  '/offline.html'
 ];
 
 self.addEventListener('install', event => {
