@@ -83,34 +83,14 @@ notesArea.addEventListener('input', () => {
   localStorage.setItem('notes', notesArea.value);
 });
 
-// ---------- SERVICE WORKER REGISTRATION (V3 - cache bust & force update) ----------
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js?v=3', { scope: '/' })
-    .then(reg => {
-      console.log('Service Worker registered with scope:', reg.scope);
-      // If a waiting worker exists, tell it to skipWaiting immediately
-      if (reg.waiting) {
-        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-      }
-      // When a new worker is found, also force activation
-      reg.addEventListener('updatefound', () => {
-        const newWorker = reg.installing;
-        if (newWorker) {
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              newWorker.postMessage({ type: 'SKIP_WAITING' });
-            }
-          });
-        }
-      });
-
-      // Dummy background sync / periodic sync register
-      reg.sync.register('modo-sync').catch(() => {});
-      if ('periodicSync' in reg) {
-        reg.periodicSync.register('modo-periodic', {
-          minInterval: 24 * 60 * 60 * 1000
-        }).catch(() => {});
-      }
-    })
-    .catch(err => console.error('Service Worker registration failed:', err));
+// ---------- Dummy Sync Registration (only when SW is ready) ----------
+if ('serviceWorker' in navigator && 'SyncManager' in window) {
+  navigator.serviceWorker.ready.then(reg => {
+    reg.sync.register('modo-sync').catch(() => {});
+    if ('periodicSync' in reg) {
+      reg.periodicSync.register('modo-periodic', {
+        minInterval: 24 * 60 * 60 * 1000
+      }).catch(() => {});
+    }
+  });
 }
