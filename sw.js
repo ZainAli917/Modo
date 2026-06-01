@@ -1,4 +1,4 @@
-const CACHE_NAME = 'modo-v3';
+const CACHE_NAME = 'modo-v4';
 const ASSETS = [
   '/',
   '/index.html',
@@ -8,63 +8,62 @@ const ASSETS = [
   '/offline.html'
 ];
 
-// Install & Cache
+// Install
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
   );
-  // Activate new service worker immediately
-  self.skipWaiting();
+  self.skipWaiting(); // Activate immediately
 });
 
+// Activate & claim all clients
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => Promise.all(
       keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
     ))
   );
-  // Take control of all pages immediately
-  self.clients.claim();
+  self.clients.claim(); // Take control immediately
 });
 
+// Fetch strategy: network first, fallback to cache, then offline page
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      return cached || fetch(event.request).catch(() => {
-        // If offline and it's a navigation request, show offline page
-        if (event.request.mode === 'navigate') {
-          return caches.match('/offline.html');
-        }
-      });
-    })
+    fetch(event.request)
+      .catch(() => {
+        return caches.match(event.request).then(cached => {
+          if (cached) return cached;
+          if (event.request.mode === 'navigate') return caches.match('/offline.html');
+        });
+      })
   );
 });
 
-// Handle skip waiting message from page
+// Message handler for skip waiting
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
 });
 
-// ---------- BACKGROUND SYNC ----------
+// Background Sync (dummy)
 self.addEventListener('sync', event => {
   if (event.tag === 'modo-sync') {
-    console.log('Background Sync triggered');
+    console.log('Sync triggered');
   }
 });
 
-// ---------- PERIODIC SYNC ----------
+// Periodic Sync (dummy)
 self.addEventListener('periodicsync', event => {
   if (event.tag === 'modo-periodic') {
-    console.log('Periodic Sync triggered');
+    console.log('Periodic sync triggered');
   }
 });
 
-// ---------- PUSH NOTIFICATIONS ----------
+// Push Notification (dummy)
 self.addEventListener('push', event => {
   const options = {
-    body: event.data ? event.data.text() : 'Modo update',
+    body: 'Modo update',
     icon: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="192" height="192"%3E%3Crect width="192" height="192" fill="%234CAF50"/%3E%3Ctext x="96" y="96" font-size="72" fill="white" text-anchor="middle" dominant-baseline="central"%3EM%3C/text%3E%3C/svg%3E',
     badge: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="96" height="96"%3E%3Crect width="96" height="96" fill="%234CAF50"/%3E%3C/svg%3E'
   };
