@@ -13,43 +13,34 @@
   "lang": "en",
   "dir": "ltr",
   "categories": ["productivity", "utilities"],
-  "scope_extensions": [
-    { "origin": "https://modo-nu.vercel.app" }
-  ],
-  "launch_handler": {
-    "client_mode": "focus-existing"
-  },
-  "protocol_handlers": [
-    {
-      "protocol": "web+modo",
-      "url": "/?protocol=%s"
-    }
-  ],
+  "scope_extensions": [{ "origin": "https://modo-nu.vercel.app" }],
+  "launch_handler": { "client_mode": "focus-existing" },
+  "protocol_handlers": [{ "protocol": "web+modo", "url": "/?protocol=%s" }],
   "share_target": {
-    "action": "/",
-    "method": "GET",
+    "action": "/", "method": "GET",
     "enctype": "application/x-www-form-urlencoded",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url"
-    }
+    "params": { "title": "title", "text": "text", "url": "url" }
   },
-  "edge_side_panel": {
-    "preferred_width": 480
-  },
-  "note_taking": {
-    "new_note_url": "/?action=add-note"
-  },
-  "file_handlers": [
+  "edge_side_panel": { "preferred_width": 480 },
+  "note_taking": { "new_note_url": "/?action=add-note" },
+  "file_handlers": [{ "action": "/", "accept": { "text/plain": [".txt"], "text/markdown": [".md"] } }],
+  "widgets": [
     {
-      "action": "/",
-      "accept": {
-        "text/plain": [".txt"],
-        "text/markdown": [".md"]
-      }
+      "name": "Modo Quick Note",
+      "description": "Add a quick note or task from your home screen",
+      "tag": "modo-quick-note",
+      "template": "generic-template",
+      "ms_ac_template": "/widget-template.json",
+      "data": "/widget-data.json",
+      "type": "application/json",
+      "screenshots": [{ "src": "/icons/screenshot-mobile.png", "sizes": "1080x1920", "label": "Modo Widget Preview" }],
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" }],
+      "auth": false,
+      "update": 86400
     }
   ],
+  "related_applications": [{ "platform": "webapp", "url": "https://modo-nu.vercel.app/manifest.json" }],
+  "prefer_related_applications": false,
   "icons": [
     { "src": "/icons/icon-72x72.png", "sizes": "72x72", "type": "image/png", "purpose": "maskable any" },
     { "src": "/icons/icon-96x96.png", "sizes": "96x96", "type": "image/png", "purpose": "maskable any" },
@@ -61,37 +52,11 @@
     { "src": "/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable any" }
   ],
   "screenshots": [
-    {
-      "src": "/icons/screenshot-mobile.png",
-      "sizes": "1080x1920",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Modo App - Mobile View"
-    },
-    {
-      "src": "/icons/screenshot-desktop.png",
-      "sizes": "1920x1080",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Modo App - Desktop View"
-    }
+    { "src": "/icons/screenshot-mobile.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow", "label": "Modo App - Mobile View" },
+    { "src": "/icons/screenshot-desktop.png", "sizes": "1920x1080", "type": "image/png", "form_factor": "wide", "label": "Modo App - Desktop View" }
   ],
   "shortcuts": [
-    {
-      "name": "Add Todo",
-      "short_name": "Todo",
-      "description": "Add a new todo item",
-      "url": "/?action=add-todo",
-      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "Quick Note",
-      "short_name": "Note",
-      "description": "Add a quick note",
-      "url": "/?action=add-note",
-      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
-    }
-  ],
-  "related_applications": [],
-  "prefer_related_applications": false
+    { "name": "Add Todo", "short_name": "Todo", "description": "Add a new todo item", "url": "/?action=add-todo", "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }] },
+    { "name": "Quick Note", "short_name": "Note", "description": "Add a quick note", "url": "/?action=add-note", "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }] }
+  ]
 }
