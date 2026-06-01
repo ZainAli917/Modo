@@ -1,4 +1,4 @@
-const CACHE_NAME = 'modo-v6';
+const CACHE_NAME = 'modo-v7';
 const ASSETS = [
   '/',
   '/index.html',
@@ -8,7 +8,7 @@ const ASSETS = [
   '/offline.html'
 ];
 
-// Install – cache assets and activate immediately
+// Install – cache all assets, activate immediately
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
@@ -16,7 +16,7 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
-// Activate – take control of all clients now
+// Activate – claim clients right away
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => Promise.all(
@@ -26,14 +26,34 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Network first, fallback to cache, then offline page for navigation
+// Cache-first strategy – always serve from cache instantly if available
 self.addEventListener('fetch', event => {
   event.respondWith(
-    fetch(event.request)
-      .catch(() => caches.match(event.request))
-      .then(response => {
-        if (response) return response;
-        if (event.request.mode === 'navigate') return caches.match('/offline.html');
-      })
+    caches.match(event.request).then(cachedResponse => {
+      if (cachedResponse) {
+        // Background cache update (stale-while-revalidate)
+        event.waitUntil(
+          fetch(event.request).then(networkResponse => {
+            return caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, networkResponse.clone());
+              return networkResponse;
+            });
+          }).catch(() => {})
+        );
+        return cachedResponse;
+      }
+      // Not in cache – try network
+      return fetch(event.request).then(networkResponse => {
+        return caches.open(CACHE_NAME).then(cache => {
+          cache.put(event.request, networkResponse.clone());
+          return networkResponse;
+        });
+      }).catch(() => {
+        // If both cache and network fail, serve offline page for navigation
+        if (event.request.mode === 'navigate') {
+          return caches.match('/offline.html');
+        }
+      });
+    })
   );
 });
