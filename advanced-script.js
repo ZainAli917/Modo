@@ -2,7 +2,7 @@
 (function() {
   'use strict';
 
-  // === CONFIG ===
+  // Feature flags – you can turn on/off anything
   const FEATURES = {
     themeToggle: true,
     voiceInput: true,
@@ -11,7 +11,7 @@
     dragDrop: true,
     search: true,
     richNotes: true,
-    pomodoro: false,   // optional
+    pomodoro: false,
     dailyQuote: true,
     notifications: true,
     shareTarget: true
@@ -29,14 +29,15 @@
 
     const toggleBtn = document.createElement('button');
     toggleBtn.id = 'theme-toggle';
-    toggleBtn.innerHTML = '🌙';
+    toggleBtn.innerHTML = document.body.classList.contains('light-mode') ? '☀️' : '🌙';
     toggleBtn.title = 'Toggle light/dark mode';
     document.body.appendChild(toggleBtn);
 
     toggleBtn.addEventListener('click', () => {
       document.body.classList.toggle('light-mode');
-      localStorage.setItem('modo-theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
-      toggleBtn.innerHTML = document.body.classList.contains('light-mode') ? '☀️' : '🌙';
+      const isLight = document.body.classList.contains('light-mode');
+      localStorage.setItem('modo-theme', isLight ? 'light' : 'dark');
+      toggleBtn.innerHTML = isLight ? '☀️' : '🌙';
     });
   }
 
@@ -52,31 +53,31 @@
     return { text: cleanText, tags };
   }
 
-  // Override addTodo to include tags
-  const originalAddTodo = window.addTodo || function(){};
+  // Enhanced addTodo
   window.addTodo = function() {
     const input = document.getElementById('todo-input');
     const raw = input.value.trim();
     if (!raw) return;
-    const { text, tags } = parseTask(raw);
+    const { text, tags } = FEATURES.categories ? parseTask(raw) : { text: raw, tags: [] };
     const dueDate = document.getElementById('todo-due')?.value || null;
     todos.unshift({ text, tags, dueDate, done: false, created: Date.now() });
     saveTodos();
     renderTodos();
     input.value = '';
     input.focus();
-    scheduleNotification(text, dueDate);
+    if (FEATURES.notifications && dueDate) scheduleNotification(text, dueDate);
   };
 
-  // Enhanced render with tags & due dates
-  const originalRender = window.renderTodos || function(){};
+  // ====================
+  // 3. ENHANCED RENDER
+  // ====================
   window.renderTodos = function() {
     const list = document.getElementById('todo-list');
     if (!list) return;
     if (todos.length === 0) {
       list.innerHTML = `<div class="empty">
         <div class="empty-icon">✨</div>
-        <p>No tasks yet. Say something like “Buy milk #errands”</p>
+        <p>No tasks yet. Try “Buy milk #errands”</p>
       </div>`;
       return;
     }
@@ -105,31 +106,33 @@
           <button class="todo-del" onclick="deleteTodo(${i})">×</button>
         </div>`;
     }).join('');
-    initDragDrop();
+    if (FEATURES.dragDrop) initDragDrop();
     initSwipe();
   };
 
-  // Helper to show saved render
-  function escHtml(s) { 
+  // Helper escHtml (ensure it exists)
+  window.escHtml = window.escHtml || function(s) {
     const div = document.createElement('div');
     div.appendChild(document.createTextNode(s));
     return div.innerHTML;
-  }
+  };
 
   // ====================
-  // 3. DUE DATE INPUT
+  // 4. DUE DATE INPUT
   // ====================
   if (FEATURES.dueDates) {
     const row = document.querySelector('.input-row');
-    const dateInput = document.createElement('input');
-    dateInput.type = 'date';
-    dateInput.id = 'todo-due';
-    dateInput.style.cssText = 'width:130px; margin-left:8px;';
-    row.appendChild(dateInput);
+    if (row && !document.getElementById('todo-due')) {
+      const dateInput = document.createElement('input');
+      dateInput.type = 'date';
+      dateInput.id = 'todo-due';
+      dateInput.style.cssText = 'width:130px; margin-left:8px;';
+      row.appendChild(dateInput);
+    }
   }
 
   // ====================
-  // 4. DRAG & DROP
+  // 5. DRAG & DROP
   // ====================
   function initDragDrop() {
     document.querySelectorAll('.todo-item').forEach(item => {
@@ -154,19 +157,19 @@
     e.preventDefault();
     this.classList.remove('drag-over');
     const targetIndex = +this.dataset.index;
-    if (dragSrcIndex !== targetIndex) {
+    if (dragSrcIndex !== targetIndex && !isNaN(targetIndex)) {
       const moved = todos.splice(dragSrcIndex, 1)[0];
       todos.splice(targetIndex, 0, moved);
       saveTodos();
       renderTodos();
     }
   }
-  function handleDragEnd(e) {
+  function handleDragEnd() {
     this.classList.remove('dragging');
   }
 
   // ====================
-  // 5. SWIPE GESTURES
+  // 6. SWIPE GESTURES
   // ====================
   function initSwipe() {
     document.querySelectorAll('.todo-item').forEach(item => {
@@ -176,56 +179,54 @@
         const diff = startX - e.changedTouches[0].clientX;
         if (Math.abs(diff) > 80) {
           const index = +item.dataset.index;
-          if (diff > 0) deleteTodo(index);   // swipe left
-          else toggleTodo(index);             // swipe right
+          if (diff > 0) deleteTodo(index);   // swipe left -> delete
+          else toggleTodo(index);             // swipe right -> complete
         }
       });
     });
   }
 
   // ====================
-  // 6. VOICE INPUT
+  // 7. VOICE INPUT
   // ====================
   if (FEATURES.voiceInput && 'webkitSpeechRecognition' in window) {
+    const row = document.querySelector('.input-row');
     const voiceBtn = document.createElement('button');
     voiceBtn.className = 'btn';
     voiceBtn.innerHTML = '🎤';
     voiceBtn.title = 'Add task by voice';
     voiceBtn.style.marginLeft = '8px';
-    document.querySelector('.input-row').appendChild(voiceBtn);
+    row.appendChild(voiceBtn);
     const recognition = new webkitSpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = false;
-    voiceBtn.addEventListener('click', () => {
-      recognition.start();
-    });
+    voiceBtn.addEventListener('click', () => recognition.start());
     recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      document.getElementById('todo-input').value = transcript;
+      document.getElementById('todo-input').value = event.results[0][0].transcript;
       window.addTodo();
     };
   }
 
   // ====================
-  // 7. RICH NOTES
+  // 8. RICH NOTES (replace textarea with contenteditable)
   // ====================
   if (FEATURES.richNotes) {
     const notesArea = document.getElementById('notes-area');
     if (notesArea) {
-      notesArea.removeAttribute('placeholder'); // we'll use contenteditable div
       const editableDiv = document.createElement('div');
       editableDiv.id = 'notes-editor';
       editableDiv.contentEditable = true;
-      editableDiv.style.cssText = notesArea.style.cssText + ' min-height:160px; white-space: pre-wrap;';
-      editableDiv.innerHTML = notesArea.value;
+      editableDiv.style.cssText = notesArea.style.cssText + ' min-height:160px; white-space: pre-wrap; outline: none;';
+      editableDiv.innerHTML = localStorage.getItem('modo-notes') || '';
       notesArea.parentNode.replaceChild(editableDiv, notesArea);
 
+      // Toolbar
       const toolbar = document.createElement('div');
       toolbar.id = 'notes-toolbar';
       toolbar.innerHTML = `
-        <button data-cmd="bold">B</button>
-        <button data-cmd="italic">I</button>
-        <button data-cmd="insertUnorderedList">•</button>
+        <button data-cmd="bold"><b>B</b></button>
+        <button data-cmd="italic"><i>I</i></button>
+        <button data-cmd="insertUnorderedList">• List</button>
       `;
       editableDiv.parentNode.insertBefore(toolbar, editableDiv.nextSibling);
 
@@ -236,19 +237,25 @@
         }
       });
 
+      // Auto-save
       editableDiv.addEventListener('input', () => {
         localStorage.setItem('modo-notes', editableDiv.innerHTML);
-        document.getElementById('notes-saved')?.classList.add('show');
-        setTimeout(() => document.getElementById('notes-saved')?.classList.remove('show'), 2000);
-        const wordCount = editableDiv.innerText.length;
+        const savedSpan = document.getElementById('notes-saved');
+        if (savedSpan) {
+          savedSpan.classList.add('show');
+          setTimeout(() => savedSpan.classList.remove('show'), 2000);
+        }
         const charSpan = document.getElementById('char-count');
-        if (charSpan) charSpan.textContent = wordCount + ' chars';
+        if (charSpan) {
+          const text = editableDiv.innerText || '';
+          charSpan.textContent = text.length + ' chars';
+        }
       });
     }
   }
 
   // ====================
-  // 8. GLOBAL SEARCH
+  // 9. GLOBAL SEARCH
   // ====================
   if (FEATURES.search) {
     const searchInput = document.createElement('input');
@@ -262,30 +269,23 @@
         const text = item.querySelector('.todo-text')?.innerText.toLowerCase() || '';
         item.style.display = text.includes(term) ? '' : 'none';
       });
-      // also highlight in notes if rich editor active
       const editor = document.getElementById('notes-editor');
-      if (editor) {
-        // simple highlight (you could implement mark.js)
+      if (editor && term) {
+        // simple highlight (reset first)
         const html = editor.innerHTML.replace(/<mark>/g,'').replace(/<\/mark>/g,'');
-        if (term) {
-          const regex = new RegExp(`(${term})`, 'gi');
-          editor.innerHTML = html.replace(regex, '<mark>$1</mark>');
-        } else {
-          editor.innerHTML = html;
-        }
+        const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        editor.innerHTML = html.replace(regex, '<mark>$1</mark>');
+      } else if (editor) {
+        editor.innerHTML = editor.innerText; // reset
       }
     });
   }
 
   // ====================
-  // 9. POMODORO TIMER (optional)
+  // 10. POMODORO (optional)
   // ====================
   if (FEATURES.pomodoro) {
-    // Add a fab button to start pomodoro
-    // This is a full mini timer, but I'll keep it brief
-    // Actually, I'll include a simple implementation
     const fab = document.createElement('button');
-    fab.id = 'pomodoro-fab';
     fab.innerHTML = '⏱️';
     fab.style.cssText = 'position:fixed;bottom:20px;right:20px;width:48px;height:48px;border-radius:50%;background:var(--accent);color:white;border:none;font-size:24px;cursor:pointer;z-index:300;';
     document.body.appendChild(fab);
@@ -298,11 +298,27 @@
       <button id="timer-reset">↺</button>`;
     document.body.appendChild(panel);
     fab.addEventListener('click', () => panel.style.display = 'flex');
-    // rest of timer logic...
+    document.getElementById('timer-start').addEventListener('click', () => {
+      if (running) { clearInterval(timerInterval); running = false; return; }
+      running = true;
+      timerInterval = setInterval(() => {
+        seconds--;
+        if (seconds <= 0) { clearInterval(timerInterval); running = false; seconds = 0; }
+        const m = Math.floor(seconds/60).toString().padStart(2,'0');
+        const s = (seconds%60).toString().padStart(2,'0');
+        document.getElementById('timer-display').textContent = `${m}:${s}`;
+      }, 1000);
+    });
+    document.getElementById('timer-reset').addEventListener('click', () => {
+      clearInterval(timerInterval);
+      running = false;
+      seconds = 25*60;
+      document.getElementById('timer-display').textContent = '25:00';
+    });
   }
 
   // ====================
-  // 10. DAILY MOTIVATION QUOTE
+  // 11. DAILY QUOTE
   // ====================
   if (FEATURES.dailyQuote) {
     fetch('https://api.quotable.io/random?tags=productivity')
@@ -311,48 +327,48 @@
         const quoteBox = document.createElement('div');
         quoteBox.style.cssText = 'text-align:center;margin:16px 0;font-style:italic;color:var(--text-muted);font-size:14px;';
         quoteBox.innerHTML = `"${data.content}" — ${data.author}`;
-        document.querySelector('main').prepend(quoteBox);
+        const main = document.querySelector('main');
+        main.insertBefore(quoteBox, main.firstChild);
       })
       .catch(() => {});
   }
 
   // ====================
-  // 11. SHARE TARGET HANDLING
+  // 12. SHARE TARGET
   // ====================
   if (FEATURES.shareTarget) {
     const urlParams = new URLSearchParams(window.location.search);
     const sharedText = urlParams.get('text') || urlParams.get('title') || urlParams.get('url');
     if (sharedText) {
-      document.getElementById('todo-input').value = sharedText;
-      window.addTodo();
+      const input = document.getElementById('todo-input');
+      if (input) {
+        input.value = sharedText;
+        window.addTodo();
+      }
     }
   }
 
   // ====================
-  // 12. NOTIFICATIONS (due tasks)
+  // 13. NOTIFICATIONS
   // ====================
   function scheduleNotification(taskText, dueDate) {
     if (!('Notification' in window) || !dueDate) return;
-    Notification.requestPermission().then(perm => {
-      if (perm === 'granted') {
-        const due = new Date(dueDate).getTime();
-        const now = Date.now();
-        if (due > now) {
-          setTimeout(() => {
-            new Notification('Modo Reminder', { body: `Task due: ${taskText}`, icon: '/icons/icon-192x192.png' });
-          }, due - now);
-        }
-      }
-    });
+    const due = new Date(dueDate).getTime();
+    const now = Date.now();
+    if (due > now) {
+      const timeout = due - now;
+      setTimeout(() => {
+        new Notification('⏰ Task Due', { body: taskText, icon: '/icons/icon-192x192.png' });
+      }, timeout);
+    }
   }
 
-  // Initialize everything
+  // ====================
+  // INIT
+  // ====================
   if (FEATURES.themeToggle) initTheme();
-  // Note: renderTodos is already called in original script, but we've overridden it, so it will use new version
-  // Re-render to pick up new markup (but careful: original renderTodos already called once)
-  // So just call it again after DOM ready.
+  // Re-render to pick up new markup (after original script already ran once)
   document.addEventListener('DOMContentLoaded', () => {
     if (typeof window.renderTodos === 'function') window.renderTodos();
   });
-
 })();
