@@ -1,0 +1,13 @@
+{
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "body": [
+    { "type": "TextBlock", "text": "Modo", "weight": "bolder", "size": "medium", "color": "accent" },
+    { "type": "TextBlock", "text": "${description}", "wrap": true, "size": "small" }
+  ],
+  "actions": [
+    { "type": "Action.OpenUrl", "title": "Add Quick Note", "url": "https://modo-nu.vercel.app/?action=add-note" },
+    { "type": "Action.OpenUrl", "title": "Add Todo", "url": "https://modo-nu.vercel.app/?action=add-todo" }
+  ]
+}
