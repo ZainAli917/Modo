@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Modo</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Modo</h1>
+    <div id="clock"></div>
+    <div id="date"></div>
+  </header>
+
+  <main>
+    <section id="todo-section">
+      <h2>To-Do</h2>
+      <form id="todo-form">
+        <input type="text" id="todo-input" placeholder="New task..." required />
+        <button type="submit">Add</button>
+      </form>
+      <ul id="todo-list"></ul>
+    </section>
+
+    <section id="notes-section">
+      <h2>Quick Notes</h2>
+      <textarea id="notes-area" placeholder="Write your notes here..."></textarea>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js', { scope: './' });
+    }
+  </script>
+</body>
+</html>
