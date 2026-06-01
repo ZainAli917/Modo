@@ -8,19 +8,22 @@
   <link rel="manifest" href="manifest.json" />
   <title>Modo</title>
   <link rel="stylesheet" href="style.css" />
-  <!-- Service Worker Registration – early and forced -->
+  <!-- 🔥 Guaranteed Service Worker Control -->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js', { scope: '/' })
         .then(reg => {
           console.log('SW registered');
-          // Wait until SW claims this page
-          return navigator.serviceWorker.ready;
+          // Agar page already controlled nahi hai, to reload karo – sirf ek baar
+          if (!navigator.serviceWorker.controller) {
+            // Pehle hi reload na ho chuka ho
+            if (!sessionStorage.getItem('sw-reloaded')) {
+              sessionStorage.setItem('sw-reloaded', '1');
+              window.location.reload();
+            }
+          }
         })
-        .then(() => {
-          console.log('SW now controls the page');
-        })
-        .catch(err => console.error('SW failed', err));
+        .catch(err => console.error('SW registration failed:', err));
     }
   </script>
 </head>
