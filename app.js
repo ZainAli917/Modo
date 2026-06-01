@@ -82,3 +82,15 @@ notesArea.value = localStorage.getItem('notes') || '';
 notesArea.addEventListener('input', () => {
   localStorage.setItem('notes', notesArea.value);
 });
+
+// ---------- REGISTER SYNC & PERIODIC SYNC (Dummy) ----------
+if ('serviceWorker' in navigator && 'SyncManager' in window) {
+  navigator.serviceWorker.ready.then(reg => {
+    reg.sync.register('modo-sync').catch(() => {});
+    if ('periodicSync' in reg) {
+      reg.periodicSync.register('modo-periodic', {
+        minInterval: 24 * 60 * 60 * 1000 // 1 day
+      }).catch(() => {});
+    }
+  });
+}
