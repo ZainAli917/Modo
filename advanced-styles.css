@@ -1,0 +1,190 @@
+/* ========== MODERN OVERRIDES & ENHANCEMENTS ========== */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  --blur: blur(20px);
+  --accent-rgb: 233, 69, 96; /* default accent */
+  --easing: cubic-bezier(0.16, 1, 0.3, 1);
+  --text-primary: #eaeaea;
+  --text-secondary: #888;
+  --surface-glass: rgba(26, 26, 46, 0.7);
+}
+
+/* Light mode overrides */
+body.light-mode {
+  --bg: #f5f5f7;
+  --surface: #ffffff;
+  --surface2: #e8e8ed;
+  --text: #1d1d1f;
+  --text-muted: #6e6e73;
+  --border: #d2d2d7;
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+  --surface-glass: rgba(255, 255, 255, 0.7);
+}
+
+/* Apply glass to cards */
+.todo-item, #notes-area, .input-row input, .btn {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow);
+  transition: transform 0.2s var(--easing), box-shadow 0.3s var(--easing);
+}
+
+.todo-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+}
+
+.btn {
+  background: rgba(233, 69, 96, 0.9) !important;
+  backdrop-filter: blur(10px);
+  border: none !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ripple effect */
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 0; height: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+.btn:active::after {
+  width: 300px; height: 300px;
+}
+
+/* Theme toggle */
+#theme-toggle {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--text-muted);
+  cursor: pointer;
+  z-index: 110;
+  width: 36px; height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+}
+
+/* Category tags */
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-right: 6px;
+  background: rgba(233,69,96,0.15);
+  color: var(--accent);
+}
+
+/* Due date badge */
+.due-badge {
+  font-size: 12px;
+  background: var(--surface2);
+  border-radius: 6px;
+  padding: 2px 8px;
+  color: var(--text-muted);
+  margin-left: 8px;
+  white-space: nowrap;
+}
+.due-badge.overdue { color: var(--accent); font-weight: 600; }
+
+/* Drag & drop */
+.todo-item.dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+}
+.todo-item.drag-over {
+  border-top: 2px solid var(--accent);
+}
+
+/* Swipe actions */
+.todo-item {
+  position: relative;
+  overflow: hidden;
+}
+.swipe-action {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.swipe-left { right: 0; background: var(--accent); }
+.swipe-right { left: 0; background: var(--success); }
+.todo-item.swiping .swipe-action { opacity: 1; }
+
+/* Rich notes toolbar */
+#notes-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+#notes-toolbar button {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+}
+#notes-toolbar button:hover { color: var(--accent); }
+
+/* Search */
+#search-bar {
+  margin-bottom: 16px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 10px 16px;
+  color: var(--text);
+  width: 100%;
+  font-family: var(--font);
+}
+
+/* Pomodoro overlay */
+#pomodoro-panel {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 200;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+#timer-display { font-size: 24px; font-weight: 700; }
