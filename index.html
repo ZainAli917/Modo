@@ -8,34 +8,19 @@
   <link rel="manifest" href="manifest.json" />
   <title>Modo</title>
   <link rel="stylesheet" href="style.css" />
-  <!-- Early SW registration -->
+  <!-- Service Worker Registration – early and forced -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js?v=4', { scope: '/' })
+      navigator.serviceWorker.register('/sw.js', { scope: '/' })
         .then(reg => {
           console.log('SW registered');
-          // Force waiting worker to activate immediately
-          if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-          reg.addEventListener('updatefound', () => {
-            const newWorker = reg.installing;
-            if (newWorker) {
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  newWorker.postMessage({ type: 'SKIP_WAITING' });
-                }
-              });
-            }
-          });
+          // Wait until SW claims this page
+          return navigator.serviceWorker.ready;
         })
-        .catch(err => console.error('SW registration failed', err));
-
-      // If a new SW takes control, reload the page once to ensure it's fully under control
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!window.reloadedForSW) {
-          window.reloadedForSW = true;
-          window.location.reload();
-        }
-      });
+        .then(() => {
+          console.log('SW now controls the page');
+        })
+        .catch(err => console.error('SW failed', err));
     }
   </script>
 </head>
