@@ -95,3 +95,16 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification('Modo', options)
   );
 });
+// Periodic Background Sync - show latest data instantly
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'modo-sync') {
+    event.waitUntil(periodicSync());
+  }
+});
+
+async function periodicSync() {
+  const clients = await self.clients.matchAll();
+  clients.forEach(client => {
+    client.postMessage({ type: 'PERIODIC_SYNC' });
+  });
+}
